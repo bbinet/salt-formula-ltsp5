@@ -4,3 +4,4 @@ parameters:
   ltsp:
     service:
       enabled: true
+      running: true
