@@ -1,0 +1,34 @@
+https://github.com/raspberrypi/piserver/blob/6a95e708cb2f1eb74ae235cb661551bd546cfa46/src/piserver.cpp#L435-L467
+
+void PiServer::regenDnsmasqConf(bool restartDnsmasqIfChanged)
+{
+    //ofstream fs(PISERVER_DNSMASQCONFFILE, ios_base::out | ios_base::trunc);
+    stringstream fs;
+    fs << "# This is an auto-generated file. DO NOT EDIT" << endl << endl
+       << "bind-dynamic" << endl
+       << "log-dhcp" << endl
+       << "enable-tftp" << endl
+       << "tftp-root="+string(PISERVER_TFTPROOT) << endl
+       << "tftp-unique-root=mac" << endl
+       << "local-service" << endl
+       << "host-record=piserver,"+currentIP() << endl;
+    if ( getSetting("standaloneDhcpServer", 0) )
+    {
+        fs << "dhcp-range=tag:piserver,"+getSetting("startIP")+","+getSetting("endIP")+","+getSetting("netmask") << endl;
+        string gw = getSetting("gateway");
+        if (!gw.empty())
+            fs << "dhcp-option=tag:piserver,option:router,"+gw << endl;
+    }
+    else
+    {
+        fs << "dhcp-range=tag:piserver,"+currentIP()+",proxy" << endl;
+    }
+    fs << "pxe-service=tag:piserver,0,\"Raspberry Pi Boot\"" << endl
+       << "dhcp-reply-delay=tag:piserver,1" << endl << endl;
+
+    for (auto &kv : _hosts)
+    {
+        if (kv.second->distro())
+        {
+            fs << "dhcp-host="+kv.second->mac()+",set:piserver" << endl;
+
