@@ -4,6 +4,16 @@
 ltsp_pkgs:
   pkg.installed:
     - pkgs: {{ service.pkgs }}
+{%- if 'qemu-user-static' in service.pkgs and grains.get('virtual_subtype') == 'Docker' %}
+fix_qemu-user-static_postinst:
+  cmd.run:
+    - name: >
+        sed -i.bak "s/grep.*container= .*environ.*exit 0/#&/" /var/lib/dpkg/info/qemu-user-static.postinst;
+        dpkg-reconfigure qemu-user-static;
+        mv /var/lib/dpkg/info/qemu-user-static.postinst{.bak,}
+    - onchanges:
+      - pkg: ltsp_pkgs
+{%- endif %}
 
 /usr/local/bin/nm_unmanage_device.py:
   file.managed:
