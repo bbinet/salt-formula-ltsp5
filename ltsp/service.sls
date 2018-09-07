@@ -6,11 +6,19 @@ ltsp_pkgs:
     - pkgs: {{ service.pkgs }}
     - require_in:
       - network: linux_interface_{{ service.iface }}
+{%- if salt['pillar.get']('linux:system:repo', {})|length > 0 and salt['pillar.get']('linux:system:enabled', False) %}
+    - require:
+      - sls: linux.system.repo
+{%- endif %}
 
 {%- if service.multiarch and not grains.get('noservices') %}
 ltsp_pkgs_multiarch:
   pkg.installed:
     - pkgs: {{ service.pkgs_multiarch }}
+{%- if salt['pillar.get']('linux:system:repo', {})|length > 0 and salt['pillar.get']('linux:system:enabled', False) %}
+    - require:
+      - sls: linux.system.repo
+{%- endif %}
 {%- if 'qemu-user-static' in service.pkgs_multiarch and grains.get('virtual_subtype') == 'Docker' %}
 fix_qemu-user-static_postinst:
   cmd.run:
