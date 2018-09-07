@@ -38,7 +38,7 @@ fix_qemu-user-static_postinst:
     - require_in:
       - network: linux_interface_{{ service.iface }}
 
-/etc/ltsp/lts.conf:
+{{ service.etc }}/lts.conf:
   file.managed:
     - source: salt://ltsp/files/lts.conf
     - makedirs: True
@@ -111,11 +111,11 @@ fix_qemu-user-static_postinst:
     - require:
       - file: {{ service.tftproot }}
 {%- endfor %}
-/etc/ltsp/chroots/{{ chroot }}:
+{{ service.etc }}/chroots/{{ chroot }}:
   file.directory:
     - makedirs: True
     - clean: True
-/etc/ltsp/chroots/{{ chroot }}/ltsp-build-client.conf:
+{{ service.etc }}/chroots/{{ chroot }}/ltsp-build-client.conf:
   file.managed:
     - source: salt://ltsp/files/ltsp-build-client.conf
     - template: jinja
@@ -123,37 +123,37 @@ fix_qemu-user-static_postinst:
         chroot: {{ chroot }}
     - makedirs: True
     - require_in:
-      - file: /etc/ltsp/chroots/{{ chroot }}
+      - file: {{ service.etc }}/chroots/{{ chroot }}
 {%- for key, keycfg in chrootcfg.get('_keys', {}).items() %}
-/etc/ltsp/chroots/{{ chroot }}/{{ key }}:
+{{ service.etc }}/chroots/{{ chroot }}/{{ key }}:
   file.managed:
     - source: {{ keycfg.url }}
     - source_hash: {{ keycfg.hash }}
     - makedirs: True
     - require_in:
-      - file: /etc/ltsp/chroots/{{ chroot }}
-gpg_import_key_/etc/ltsp/chroots/{{ chroot }}/{{ key }}:
+      - file: {{ service.etc }}/chroots/{{ chroot }}
+gpg_import_key_{{ service.etc }}/chroots/{{ chroot }}/{{ key }}:
   module.run:
     - name: gpg.import_key
     - kwargs:
-        filename: /etc/ltsp/chroots/{{ chroot }}/{{ key }}
+        filename: {{ service.etc }}/chroots/{{ chroot }}/{{ key }}
     - require_in:
       - cmd: ltsp-build-client_{{ chroot }}
     - require:
-      - file: /etc/ltsp/chroots/{{ chroot }}/{{ key }}
+      - file: {{ service.etc }}/chroots/{{ chroot }}/{{ key }}
       - pkg: ltsp_pkgs
     - onchanges:
-      - file: /etc/ltsp/chroots/{{ chroot }}/{{ key }}
+      - file: {{ service.etc }}/chroots/{{ chroot }}/{{ key }}
 {%- endfor %}
 ltsp-build-client_{{ chroot }}:
   cmd.run:
-    - name: /usr/sbin/ltsp-build-client --purge-chroot --config /etc/ltsp/chroots/{{ chroot }}/ltsp-build-client.conf
+    - name: /usr/sbin/ltsp-build-client --purge-chroot --config {{ service.etc }}/chroots/{{ chroot }}/ltsp-build-client.conf
     - creates: {{ service.chroot[chroot]._path }}
     {%- if grains.get('noservices') %}
     - onlyif: /bin/false
     {%- endif %}
     - require:
-      - file: /etc/ltsp/chroots/{{ chroot }}
+      - file: {{ service.etc }}/chroots/{{ chroot }}
     - watch_in:
       - service: nbd-server
 {%- endif %}
