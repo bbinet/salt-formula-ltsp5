@@ -11,13 +11,14 @@ DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
 import sys
 import os
 
-import dbus
-
 DBUS_SOCKET_PATH="/host/run/dbus/system_bus_socket"
 
 if not os.access(DBUS_SOCKET_PATH, os.R_OK and os.W_OK):
     # do nothing when host dbus socket does not exist
     sys.exit(0)
+
+
+import dbus
 
 os.environ["DBUS_SYSTEM_BUS_ADDRESS"] = "unix:path=%s" % DBUS_SOCKET_PATH
 
