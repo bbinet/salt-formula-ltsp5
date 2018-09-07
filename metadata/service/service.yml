@@ -5,3 +5,4 @@ parameters:
     service:
       enabled: true
       running: true
+      multiarch: false

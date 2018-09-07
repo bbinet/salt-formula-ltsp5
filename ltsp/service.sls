@@ -6,7 +6,12 @@ ltsp_pkgs:
     - pkgs: {{ service.pkgs }}
     - require_in:
       - network: linux_interface_{{ service.iface }}
-{%- if 'qemu-user-static' in service.pkgs and grains.get('virtual_subtype') == 'Docker' %}
+
+{%- if service.multiarch and not grains.get('noservices') %}
+ltsp_pkgs_multiarch:
+  pkg.installed:
+    - pkgs: {{ service.pkgs_multiarch }}
+{%- if 'qemu-user-static' in service.pkgs_multiarch and grains.get('virtual_subtype') == 'Docker' %}
 fix_qemu-user-static_postinst:
   cmd.run:
     - name: >
@@ -14,7 +19,8 @@ fix_qemu-user-static_postinst:
         dpkg-reconfigure qemu-user-static;
         mv /var/lib/dpkg/info/qemu-user-static.postinst{.bak,}
     - onchanges:
-      - pkg: ltsp_pkgs
+      - pkg: ltsp_pkgs_multiarch
+{%- endif %}
 {%- endif %}
 
 /usr/local/bin/nm_unmanage_device.py:
@@ -134,6 +140,9 @@ ltsp-build-client_{{ chroot }}:
   cmd.run:
     - name: /usr/sbin/ltsp-build-client --purge-chroot --config /etc/ltsp/chroots/{{ chroot }}/ltsp-build-client.conf
     - creates: {{ service.chroot[chroot]._path }}
+    {%- if grains.get('noservices') %}
+    - onlyif: /bin/false
+    {%- endif %}
     - require:
       - file: /etc/ltsp/chroots/{{ chroot }}
     - watch_in:
