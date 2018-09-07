@@ -41,6 +41,7 @@ fix_qemu-user-static_postinst:
 /etc/ltsp/lts.conf:
   file.managed:
     - source: salt://ltsp/files/lts.conf
+    - makedirs: True
     - template: jinja
     - require:
       - pkg: ltsp_pkgs
